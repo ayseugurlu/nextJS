@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Fragment } from "react";
@@ -17,15 +17,12 @@ function classNames(...classes) {
 }
 
 const Navbar = () => {
-
-const{currentUser}=useAuthContext()
+  const { currentUser, logOut } = useAuthContext();
 
   const [showBackground, setShowBackground] = useState(false);
- 
- console.log(currentUser)
+
+  console.log(currentUser);
   //  const currentUser = { displayName: "ashley miller" };
-
-
 
   useEffect(() => {
     const handleScroll = () => {
@@ -127,7 +124,7 @@ const{currentUser}=useAuthContext()
                           "block px-4 py-2 text-sm text-gray-700 hover:bg-slate-200 cursor-pointer"
                         )}
                         role="button"
-                       
+                        onClick={() => logOut()}
                       >
                         Log out
                       </span>

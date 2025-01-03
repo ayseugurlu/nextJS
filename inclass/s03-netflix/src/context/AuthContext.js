@@ -1,114 +1,96 @@
-"use client"
-import { createContext, useContext,useEffect, useState } from "react"
+"use client";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
-  createUserWithEmailAndPassword,signInWithEmailAndPassword,GoogleAuthProvider,signInWithPopup,onAuthStateChanged
- 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 import { auth } from "@/auth/firebase";
-import { toastSuccessNotify,toastErrorNotify } from "@/helpers/ToastNotify";
+import { toastSuccessNotify, toastErrorNotify } from "@/helpers/ToastNotify";
 import { useRouter } from "next/navigation";
 // auth(yetki) işlemlerini yaptığımız context
-export const YetkiContext=createContext()
+export const YetkiContext = createContext();
 
 //* custom hook
-export const useAuthContext=()=>{
+export const useAuthContext = () => {
+  return useContext(YetkiContext);
+};
 
-    return useContext(YetkiContext)
-}
+const AuthContextProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState("");
 
+  const router = useRouter();
 
-const AuthContextProvider=({children})=>{
-const [currentUser, setCurrentUser]=useState("")
+  useEffect(() => {
+    userTakip();
+  }, []);
 
-const router=useRouter()
+  const createKullanici = async (email, password, displayName) => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
 
-
-useEffect(()=>{
-    userTakip()
-},[])
-
-
-
-    const createKullanici=async(email,password,displayName)=>{
-
-
-      try {
-
-      await  createUserWithEmailAndPassword(auth,email,password)
-
-  await updateProfile(auth.currentUser, {
+      await updateProfile(auth.currentUser, {
         displayName,
       });
 
-
-toastSuccessNotify("register başarılı")
-router.push("/login")
-
-
-
-        
-      } catch (error) {
-        
-       toastErrorNotify(error.message) 
-      }
-
+      toastSuccessNotify("register başarılı");
+      router.push("/login");
+    } catch (error) {
+      toastErrorNotify(error.message);
     }
+  };
 
-    const signIn=async(email,password)=>{
+  const signIn = async (email, password) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
 
- try {
+      toastSuccessNotify("login başarılı");
 
-  await   signInWithEmailAndPassword(auth, email, password)
-
-toastSuccessNotify("login başarılı")
-
-router.push("/profile")
-
-        
-      } catch (error) {
-        
-       toastErrorNotify(error.message) 
-      }
-
-
+      router.push("/profile");
+    } catch (error) {
+      toastErrorNotify(error.message);
     }
+  };
 
-const signInGoogle=()=>{
+  const signInGoogle = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        router.push("/profile");
+        toastSuccessNotify("google girişi başarılı");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
-const provider = new GoogleAuthProvider();
-signInWithPopup(auth, provider)
-  .then((result) => {
-   router.push("/profile")
-   toastSuccessNotify("google girişi başarılı")
-  })
-  .catch((error) => {
-    console.log(error)
-  });
+  const logOut = () => {
+    signOut(auth);
+    toastSuccessNotify("Logout basarili");
+  };
 
+  const userTakip = () => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const { email, displayName, photoURL } = user;
 
+        setCurrentUser({ email, displayName, photoURL });
+      } else {
+        setCurrentUser(false);
+      }
+    });
+  };
 
-}
-
-
-const userTakip=()=>{
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-  const  {email,displayName,photoURL}=user
-
-setCurrentUser({email,displayName,photoURL})
-
-
-  } else {
-    setCurrentUser(false)
-
-  }
-});
-
-}
-
-
-
-  return <YetkiContext.Provider value={{createKullanici,signIn,signInGoogle}}> {children} </YetkiContext.Provider>  
-}
+  return (
+    <YetkiContext.Provider
+      value={{ createKullanici, signIn, signInGoogle, currentUser, logOut }}
+    >
+      {" "}
+      {children}{" "}
+    </YetkiContext.Provider>
+  );
+};
 export default AuthContextProvider;

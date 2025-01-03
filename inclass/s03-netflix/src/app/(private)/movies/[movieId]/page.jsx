@@ -1,6 +1,10 @@
+import { getirVideoKey } from "@/helpers/movieFunctions";
 import React from "react";
 
-const VideoSection = ({ videoKey }) => {
+const MovieDetail = async ({ params: { movieId } }) => {
+  //   console.log(movieId);
+  const videoKey = await getirVideoKey(movieId);
+
   return (
     <div className="w-10/12 lg:w-full mx-auto">
       <div
@@ -19,4 +23,4 @@ const VideoSection = ({ videoKey }) => {
   );
 };
 
-export default VideoSection;
+export default MovieDetail;
